@@ -53,7 +53,7 @@ public class LibraryController {
         return ResponseEntity.ok(libraryService.getAllLibraries());
     }
 
-    @GetMapping
+    @GetMapping("/count")
     public ResponseEntity<String> getCount() {
         return ResponseEntity.ok("Library Service Count: " + count);
     }
