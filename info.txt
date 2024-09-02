@@ -1,0 +1,85 @@
+-- Kütüphaneye bir kitap eklemek istediğimiz durumda
+      Library service ve book service bağımsız bir uygulama.
+      Kütüphaneyi yaratma fonksiyonu kütüphane servis'de, kitap ekleme işlemi de kitap serviste. Ben bu kütüphaneye kitap eklemek istediğimde e yapacağım ?
+        • Kitap bilgisi library'nin içinde yok, bookservis'de var. Bu nedenle bookservis'e ulaşmak gerkiyor.
+        • Book servis eureka server'a register olmalı.
+
+ Eureka Server Geliştirmesi
+ main'e @EnableEurekaServer koyuyoruz ==> Bunu görünce eurekasunucusu oluşturması gerektiğini otomatik bir şekilde
+    configure edip, ilgili webui oluşturulması gerektiğini biliyor.
+    APP.PROPS
+    spring.application.name=eureka-server
+    server.port=8761
+    eureka.client.register-with-eureka=false   ==> Client'ler eureka'yı register etsin mi? false
+    eureka.client.fetch-registry=false  ==> Client'ler registry'i kendi başlarına yakalasınlar mı ? Hayır eureka'ya sorsunlar
+    Localhost8761 e girdiğindeki pencerede registered-replicas	 kısmında kaç tane eureka olduğunu ve linklerini görebilirsinz.
+
+EUureka'ya client'ların bağlanması. Burada IP sabit olmadığı için dışarıya burası açılamaz. Açılacak olan yer library api olacak.
+    - Servislerde @EnableEurekaClient ya da @EnableDiscoveryClient anatasyonu konur ==> Bu endpoint ile book servisi bağlanmak için eure Server' arar.
+    APP.PROPS
+    # 0 yazınca random port olur. Bu port bilgisi eureka olduğu için diğer servisler için bir zararı yok.
+    # Birden fazla instance çalıştırsam bile bir problem yok. 0 yazınca
+    server.port = 0
+    #Applicaton name ile ulaşılır diğer servisler ile
+    eureka.instance.prefer-ip-address=true
+    eureka.client.service-url.default-zone=${EUREKA_URI:http://localhost:8761/eureka}
+    spring.application.name=book-service
+
+FEIGN CLIENT
+Library servis Book servis'e nasıl ulaşacak
+    - Kullanılabilecek yöntemlerden bir tanesi Feign Client.
+    -  @EnableFeignClients
+    - Bu aslında bir interface'dir.
+
+    - Once bir tane client paketi içine BookServiceClient paketi açıyoruz, daha sonra Book-Servis'inde yer alması gereken metotları buraya ekliyoruz.
+
+    //verilen application name sayesinde, feign client bu ip'yi sunucu adını ve hangi path'de çalışacağını Eureka'dan alıyor ve kullanıma açıyor.
+    @FeignClient(name = "book-service", path = "/v1/book")
+    public interface BookFeignClient {
+
+        @GetMapping("/isbn/{isbn}")
+        ResponseEntity<BookIdDto> getBookByIsbn(@PathVariable String isbn);
+
+        @GetMapping("/book/{id}")
+        ResponseEntity<BookDto> getBookById(@PathVariable String id);
+    }
+
+    - Daha sonra bunu Servis'lerde de kullanabilir ve book ile ilgili işlemleri burada da yapabiliriz.
+                String bookId = bookFeignClient.getBookByIsbn(request.getIsbn()).getBody().getBookId(); //kitabın id'sini bilmiyorum isbn nuamrasını biliyorum. Her kitabın vardır bu gerçek bilgi.
+Yukarıdaki satırdaki bookId bilgisi book-servis'den geliyor ve bunu feign ile yapıyoruz
+
+
+        public void addBookToLibrary(AddBookRequest request) {
+            String bookId = bookFeignClient.getBookByIsbn(request.getIsbn()).getBody().getBookId(); //kitabın id'sini bilmiyorum isbn nuamrasını biliyorum. Her kitabın vardır bu gerçek bilgi.
+            Library library = libraryRepository.findById(request.getId())
+                    .orElseThrow(() -> new LibraryNotFoundException("Library colud not found by id: " + request.getId()));
+
+            library.getUserBook()
+                    .add(bookId);
+            libraryRepository.save(library);
+        }
+
+
+
+
+1) http://localhost:8080/v1/library Buraya boş bir post isteği atıyoruz ve biraz bir library yapıyor ve id dönüyor.
+
+2) Daha sonra bu kütüphaneye kitap ekleme için id ve kitap isbn'sini gönderiyoruz, olmayan bir isbn gödnerince hata verecektir.
+http://localhost:8080/v1/library PUT isteği
+{
+    "id":"3c0e9b19-4610-4051-90f7-68e7d8e0f115",
+    "isbn": "456789"
+}
+
+
+
+-- Record Nedir ==> Java 17 ile gelen bir sınıf tipi.
+    • Recordlar JVM'de final bir class yapar, bunun içinde constructor ve getter metotları oluyor.
+    • Bu sayede full bir immutable nesne yaratır. Böylelikle record tanımı ile boilerplate metotlardan kurtulunabilir.
+    • Record bir final class olduğu için JPA tarafında kullanılamıyor, Çünkü JPA Boş constructor ister.
+    • Record'lar extend edilemiyorlar çünkü final'lar, Proxy class oluşturulamıyor. Bunlardan dolayı Entity'lerde record kullanılamıyor.
+    • Record'lar extend edilemiyorlar çünkü final'lar, Proxy class oluşturulamıyor. Bunlardan dolayı Entity'lerde record kullanılamıyor.
+
+
+-- GATEWAY
+    Dependency'ler ==> Gateway ve eurekaya kayıt için eureka discovery client

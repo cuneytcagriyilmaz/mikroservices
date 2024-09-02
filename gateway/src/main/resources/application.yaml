@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      mvc:
+        routes: #asagidaki path'e istek gelince book-service'e ilet demek
+          - id: book-service
+            uri: lb://book-service
+            predicates:
+              - Path=/v1/book/**
+          - id: library-service
+            uri: lb://library-service
+            predicates:
+              - Path=/v1/library/**
+        discovery:
+          locator:
+            enabled: true
+  zipkin:
+    base-url:http://localhost:9411/zipkin/
+
+server:
+  port: 8888
+
+eureka:
+  client:
+    register-with-eureka: true
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true #bu ?ekilde ip ile kay?t olmas?n? sa?l?yoruz, name ile de?il.
+
+#
+#spring:
+#  application:
+#    name: gateway
+#  cloud:
+#    gateway:
+#      routes:
+#        - id: book-service
+#          uri: lb://book-service
+#          predicates:
+#            - Path=/v1/book/**
+#        - id: library-service
+#          uri: lb://library-service
+#          predicates:
+#            - Path=/v1/library/**
+#      discovery:
+#        locator:
+#          enabled: true
+#
+#server:
+#  port: 8888
+#
+#eureka:
+#  client:
+#    register-with-eureka: true
+#    service-url:
+#      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+#  instance:
+#    prefer-ip-address: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*" # Butun actuator endpointleri ekler. Bunu yazmazsak sadece healt ekler, bu da uygulama acik mi degil mi oni kontrol eder.
+        exclude: "info" #ingo isimli metrik art?k gorunmuyor
+  endpoint:
+    env:
+      show-values: always #Art?k env'nin akt?ndaki value'lar gorunur olacak. normalde **** yaz?yor
+
