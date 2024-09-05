@@ -68,6 +68,29 @@
             <artifactId>zipkin-reporter-brave</artifactId>
         </dependency>
 
+
+        <!--        GRPC -->
+        <!--        Kendi olusturdugumuz kitaplik-commun grpc kutuphanesi -->
+
+        <dependency>
+            <groupId>com.kitaplik</groupId>
+            <artifactId>kitaplik-common</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <!--        https://yidongnan.github.io/grpc-spring-boot-starter/en/ linkinden alinan grpc-->
+        <dependency>
+            <groupId>net.devh</groupId>
+            <artifactId>grpc-spring-boot-starter</artifactId>
+            <version>2.14.0.RELEASE</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.grpc</groupId>
+                    <artifactId>grpc-netty-shaded</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!--		KOTLIN-->
 
         <dependency>

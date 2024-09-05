@@ -18,7 +18,8 @@ import java.util.List;
 @RequestMapping("/v1/library")
 public class LibraryController {
 
-    @Value("${library.service.count}") // bu property spring cloud'un icinde. Bunda degil
+    @Value("${library-service.book.count}")  //Vault icin gerkli conftaki deger
+//    @Value("${library.service.count}") // bu property spring cloud'un icinde. Bunda degil
     private Integer count;
 
     //sunucuların nerede olduğunu hangi ip'ye gittigini görmek için ekleenne kodlar mevcut. Asagidaki command ise kodun normal hali

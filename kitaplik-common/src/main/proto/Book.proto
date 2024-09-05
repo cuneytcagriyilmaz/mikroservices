@@ -1,0 +1,42 @@
+//Book icin gerkeli hersey bu dosyada yazilacak, baska birsey gerektiginde baska bir dosyaya yazacagiz.
+// Hangi proto versionu kullanilacagi belirtili.
+syntax = "proto3";
+
+//dosya icinde birden fazla gRPC servis'i yazabilmek icin. Bur turlu her nesne ve servis icin ayrı bir proto yapmak gerek.
+option java_multiple_files = true;
+
+//package vermezsek kullanacagimiz yerde gorunmaz. Kesin verilmeli
+package com.kitaplik.bookservice;
+
+//nesne tanimi message keyword'u ile yapilir
+//nesne icinde nesne kullanilabilir.
+// buradaki 1 bookId nesnesinin 1. indexindeki deger demek. Bunun sayesinde gRPC bir constructor oluyor.
+// Yani 1. parametre bookId, 2. parametre isbn
+//Bu bizim response'umuz olacak
+message BookId{
+  string bookId = 1;
+  string isbn = 2;
+}
+
+
+//bu request'imiz olacak
+message Isbn {
+  string isbn = 1;
+  //  BookId bookId = 2; // inner sekilde nesne yapmak istersek boyle yapabiliriz.
+  // ayi proto icinde oldugu icin yaziyoriz. Ancak farkli proto icinde olsaydi yukariya import etmek gerekirdi
+}
+
+//Servis'i yaziyoriz.
+
+service BookService {
+  // rpc bizim metot tanimlarken js'de function diyoruz, java da public falan diyoruz. Onunla aynı is. remote protocol call gibi bir karsiligi var.
+  // method adi + birince parantez hangi veri tipinde istek alacagi + returns + hangi veri tipinde geri cevap donulucagi yazilir.
+  rpc getBookIdByIsbn (Isbn) returns (BookId);
+
+}
+
+
+
+
+
+
